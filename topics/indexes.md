@@ -1,12 +1,14 @@
 # Indexes
 
 <!-- TOC -->
+
 * [Indexes](#indexes)
-  * [Tuning](#tuning)
-  * [Concept](#concept)
-  * [Index types](#index-types)
-    * [B-tree (default, most common).](#b-tree-default-most-common)
-    * [HASH](#hash)
+    * [Tuning](#tuning)
+    * [Concept](#concept)
+    * [Index types](#index-types)
+        * [B-tree (default, most common).](#b-tree-default-most-common)
+        * [HASH](#hash)
+
 <!-- TOC -->
 
 ## Tuning
@@ -19,7 +21,7 @@ A PostgreSQL index is a separate **on-disk** data structure that provides a fast
 whole table.
 Conceptually, an index stores:
 
-* Search keys (derived from one or more columns or expressions), plus
+* Search keys (derived from one or more **columns** or **expressions**), plus
 * A pointer to the table row (the row’s TID: block number + offset within the block).
 
 [The planner](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) may choose an Index Scan, Index-only
@@ -39,7 +41,7 @@ the table rows.
 
 Name stands for: multi-way balanced tree.
 
-Best for: equality and ordering
+**Best for**: equality and ordering
 
 * `=`, `<`, `<=`, `>`, `>=`
 * `BETWEEN`
@@ -79,10 +81,22 @@ SELECT FROM my_table WHERE col2 < 10 AND col3 <= 25;
 
 Implementation of the [hash table](https://en.wikipedia.org/wiki/Hash_table) data structure.
 
-Works only with `=` operator.
+**Best for**: equality only. Works only with `=` operator.
 
 * Historically less preferred.
 * [WAL-logged](https://www.postgresql.org/about/featurematrix/detail/wal-support-for-hash-indexes/) -> crash tolerant.
 * **B-tree** usually performs **similarly** for equality while also supporting more operators.
 
 Use only when measured a real performance improvement.
+
+### GIN (Generalized Inverted Index)
+
+**Best for**: “contains” style queries where a row contains many tokens/elements.
+
+* `jsonb` (`@>`, `<@`, `?`, `?|`, `?&`). [Details here](https://www.postgresql.org/docs/9.4/functions-json.html)
+* arrays (`@>`, `&&`, `<@`)
+* full-text search (`tsvector @@ tsquery`)
+
+Typical fields: `jsonb`, `text[]`, `int[]`, `tsvector`.
+
+This index has a big overhead, query must justify usage of this index.
