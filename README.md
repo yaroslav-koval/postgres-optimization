@@ -17,16 +17,16 @@ but it's open to critic and improvements.
 
 ## Topics
 
-* [Indexes](#indexes)
-* [SARGable queries](#sargable-queries)
-* [Write ahead log (WAL)](#write-ahead-log-wal)
-* [Vacuum](#vacuum)
-* [Table data clustering](#table-data-clustering)
-* [Statistics](#statistics)
-* [Analyzation](#analyzation)
-* [Scalability](#scalability)
-* [Data distribution](#data-distribution-or-sharding)
-* [Modern observability](#modern-observability)
+* [Indexes](/topics/indexes.md)
+* SARGable queries
+* Write ahead log (WAL).
+* Vacuum
+* Table data clustering
+* Statistics (pg_stat)
+* Analyzation (vacuum analyze, analyze, explain, explain analyze)
+* Scalability
+* Data distribution
+* Modern observability
 
 ## Architecture overview
 
@@ -43,32 +43,6 @@ Memory architecture:
 Details here - https://www.interdb.jp/pg/pgsql02/02.html
 
 Each component can be tuned accordingly to system requirements.
-
-## Indexes
-
-Improvement aspects: #speed, #storage
-
-### SARGable queries
-
-### Write ahead log (WAL)
-
-### Vacuum
-
-### Table data clustering
-
-### Statistics
-
-(pg_stat)
-
-### Analyzation
-
-(vacuum analyze, analyze, explain, explain analyze)
-
-### Scalability
-
-### Data distribution or Sharding
-
-### Modern observability
 
 ## Cloud
 
