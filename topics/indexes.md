@@ -2,8 +2,6 @@
 
 <!-- TOC -->
 * [Indexes](#indexes)
-  * [Tuning](#tuning)
-    * [Profiling](#profiling)
   * [Concepts](#concepts)
     * [Index is](#index-is)
     * [Partial indexes (WHERE)](#partial-indexes-where)
@@ -39,20 +37,8 @@
       * [Disadvantages](#disadvantages-4)
       * [Typical fields](#typical-fields-4)
       * [Notes](#notes-2)
+  * [Optimization](#optimization)
 <!-- TOC -->
-
-## Tuning
-
-### Profiling
-
-[The planner](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) may choose an _Index Scan_,
-_Index-only Scan_ or _Bitmap Index Scan_ to find candidate row locations, then fetch the table rows.
-
-Command `explain` helps to determine what scan type is used. For example:
-
-```sql
-TODO
-```
 
 ## Concepts
 
@@ -260,8 +246,8 @@ Data that naturally fits into **tree-like structures**, like network types with 
 
 #### Best for
 
-**Large tables** with many columns where queries use many equality conditions (`=`) on different columns and it's not
-possible to predict combination of fields used for selection.
+**Large tables** with many columns where queries use many equality conditions (`=`) on different columns AND it's not
+possible to predict combination of fields.
 
 #### Advantages
 
@@ -294,3 +280,23 @@ Answers to question "Can this row **possibly** match **all** these filters?"
 
 Documentation [is here](https://www.postgresql.org/docs/current/bloom.html).
 
+## Optimization
+
+[The Postgres Planner](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) may choose an _Index Scan_,
+_Index-Only Scan_ or _Bitmap Index Scan_ to find candidate row locations, then fetch the table rows.
+
+Command `explain` helps to determine what scan type is used. Is index utilized or not. For example:
+
+```sql
+EXPLAIN
+SELECT id, name
+FROM books
+WHERE name = 'Computer systems: a programmer''s perspective';
+```
+
+![explain example](../assets/explain-example.png)
+
+The difference between _Index Scan_ and _Index-Only Scan_ is that during
+_Index Scan_ the Planner fetch additional data from table, but during
+_Index-Only Scan_ the Planner fetches data only from index.
+[Covering index](#covering-indexes-include) may be used to enforce _Index-Only Scan_. 
