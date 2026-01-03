@@ -1,3 +1,6 @@
+# connect by
+# psql --host localhost --port 5440 --username postgres --password --dbname store
+
 services:
   postgres:
     image: postgres:latest

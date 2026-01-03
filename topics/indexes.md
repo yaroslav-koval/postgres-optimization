@@ -1,43 +1,45 @@
 # Indexes
 
 <!-- TOC -->
+
 * [Indexes](#indexes)
-  * [Concepts](#concepts)
-    * [Index is](#index-is)
-    * [Partial indexes (WHERE)](#partial-indexes-where)
-    * [Covering indexes (INCLUDE)](#covering-indexes-include)
-  * [Index types](#index-types)
-    * [B-tree (default, most common).](#b-tree-default-most-common)
-      * [Best for](#best-for)
-      * [Advantages](#advantages)
-      * [Disadvantages](#disadvantages)
-      * [Typical fields](#typical-fields)
-      * [Notes](#notes)
-    * [HASH](#hash)
-      * [Best for](#best-for-1)
-      * [Advantages](#advantages-1)
-      * [Disadvantages](#disadvantages-1)
-      * [Typical fields](#typical-fields-1)
-    * [GIN (Generalized Inverted Index)](#gin-generalized-inverted-index)
-      * [Best for](#best-for-2)
-      * [Advantages](#advantages-2)
-      * [Disadvantages](#disadvantages-2)
-      * [Typical fields](#typical-fields-2)
-      * [Notes](#notes-1)
-    * [BRIN (Block Range Index)](#brin-block-range-index)
-      * [Best for](#best-for-3)
-      * [Advantages](#advantages-3)
-      * [Disadvantages](#disadvantages-3)
-      * [Typical fields](#typical-fields-3)
-    * [GiST (Generalized Search Tree)](#gist-generalized-search-tree)
-    * [SP-GiST (Space-Partitioned GiST)](#sp-gist-space-partitioned-gist)
-    * [Bloom index (bloom extension)](#bloom-index-bloom-extension)
-      * [Best for](#best-for-4)
-      * [Advantages](#advantages-4)
-      * [Disadvantages](#disadvantages-4)
-      * [Typical fields](#typical-fields-4)
-      * [Notes](#notes-2)
-  * [Optimization](#optimization)
+    * [Concepts](#concepts)
+        * [Index is](#index-is)
+        * [Partial indexes (WHERE)](#partial-indexes-where)
+        * [Covering indexes (INCLUDE)](#covering-indexes-include)
+    * [Index types](#index-types)
+        * [B-tree (default, most common).](#b-tree-default-most-common)
+            * [Best for](#best-for)
+            * [Advantages](#advantages)
+            * [Disadvantages](#disadvantages)
+            * [Typical fields](#typical-fields)
+            * [Notes](#notes)
+        * [HASH](#hash)
+            * [Best for](#best-for-1)
+            * [Advantages](#advantages-1)
+            * [Disadvantages](#disadvantages-1)
+            * [Typical fields](#typical-fields-1)
+        * [GIN (Generalized Inverted Index)](#gin-generalized-inverted-index)
+            * [Best for](#best-for-2)
+            * [Advantages](#advantages-2)
+            * [Disadvantages](#disadvantages-2)
+            * [Typical fields](#typical-fields-2)
+            * [Notes](#notes-1)
+        * [BRIN (Block Range Index)](#brin-block-range-index)
+            * [Best for](#best-for-3)
+            * [Advantages](#advantages-3)
+            * [Disadvantages](#disadvantages-3)
+            * [Typical fields](#typical-fields-3)
+        * [GiST (Generalized Search Tree)](#gist-generalized-search-tree)
+        * [SP-GiST (Space-Partitioned GiST)](#sp-gist-space-partitioned-gist)
+        * [Bloom index (bloom extension)](#bloom-index-bloom-extension)
+            * [Best for](#best-for-4)
+            * [Advantages](#advantages-4)
+            * [Disadvantages](#disadvantages-4)
+            * [Typical fields](#typical-fields-4)
+            * [Notes](#notes-2)
+    * [Optimization](#optimization)
+
 <!-- TOC -->
 
 ## Concepts
@@ -283,7 +285,8 @@ Documentation [is here](https://www.postgresql.org/docs/current/bloom.html).
 ## Optimization
 
 [The Postgres Planner](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) may choose an _Index Scan_,
-_Index-Only Scan_ or _Bitmap Index Scan_ to find candidate row locations, then fetch the table rows.
+_Index-Only Scan_ or _Bitmap Index Scan_ to find candidate row locations,
+then [Executor](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) fetch the table rows.
 
 Command `explain` helps to determine what scan type is used. Is index utilized or not. For example:
 
@@ -296,7 +299,19 @@ WHERE name = 'Computer systems: a programmer''s perspective';
 
 ![explain example](../assets/explain-example.png)
 
+#### Index-Only Scan
+
 The difference between _Index Scan_ and _Index-Only Scan_ is that during
-_Index Scan_ the Planner fetch additional data from table, but during
-_Index-Only Scan_ the Planner fetches data only from index.
-[Covering index](#covering-indexes-include) may be used to enforce _Index-Only Scan_. 
+_Index Scan_ the Executor fetch additional data from table, but during
+_Index-Only Scan_ the Executor fetches data only from index.
+[Covering index](#covering-indexes-include) may be used to enforce _Index-Only Scan_.
+
+#### Indexing Foreign keys
+
+Index on _Foreign key_ can:
+
+* Improve performance of joins.
+* Improve performance when making changes to a parent table.
+  DB ensures consistency of rules, therefore update/delete of parent table row can lead to usage of the index.
+
+TODO write usecases and downsides.
