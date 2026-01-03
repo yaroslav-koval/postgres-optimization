@@ -12,6 +12,7 @@
     * [Index is](#index-is)
     * [Partial indexes (WHERE)](#partial-indexes-where)
     * [Covering indexes (INCLUDE)](#covering-indexes-include)
+    * [Reindex](#reindex)
   * [Index types](#index-types)
     * [B-tree (default, most common).](#b-tree-default-most-common)
       * [Best for](#best-for)
