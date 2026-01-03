@@ -183,6 +183,10 @@ and _read/write ratio_.
 
 Official documentation [is here](https://www.postgresql.org/docs/current/indexes-index-only-scans.html).
 
+### Reindex
+
+TODO
+
 ## Index types
 
 ### B-tree (default, most common).
