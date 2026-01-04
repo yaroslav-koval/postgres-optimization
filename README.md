@@ -21,7 +21,6 @@ but it's open to critic and improvements.
 * SARGable queries
 * Write ahead log (WAL).
 * Vacuum
-* Table data clustering
 * Statistics (pg_stat)
 * Analyzation (vacuum analyze, analyze, explain, explain analyze)
 * Scalability
