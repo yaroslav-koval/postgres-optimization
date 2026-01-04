@@ -5,13 +5,15 @@
 * [Indexes](#indexes)
   * [Intro](#intro)
   * [Optimization](#optimization)
-      * [Index-Only Scan](#index-only-scan)
-      * [Indexing Foreign keys](#indexing-foreign-keys)
-      * [Partial indexes](#partial-indexes)
+    * [Index-Only Scan](#index-only-scan)
+    * [Indexing Foreign keys](#indexing-foreign-keys)
+    * [Partial indexes](#partial-indexes)
+    * [Clusterization](#clusterization)
   * [Concepts](#concepts)
     * [Index is](#index-is)
     * [Partial indexes (WHERE)](#partial-indexes-where)
     * [Covering indexes (INCLUDE)](#covering-indexes-include)
+    * [Clusterization](#clusterization-1)
     * [Reindex](#reindex)
   * [Index types](#index-types)
     * [B-tree (default, most common).](#b-tree-default-most-common)
@@ -60,8 +62,10 @@ Section [Index types](#index-types) covers different indexes and the best places
 
 ## Optimization
 
-[The Postgres Planner](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) may choose an _Index Scan_,
-_Index-Only Scan_ or _Bitmap Index Scan_ to find candidate row locations,
+### Index-Only Scan
+
+[The Postgres Planner](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) may choose a _Sequential Scan_,
+_Index Scan_, _Index-Only Scan_ or _Bitmap Index Scan_ to find candidate row locations,
 then [Executor](https://www.interdb.jp/pg/pgsql03/01.html#314-planner-and-executor) fetch the table rows.
 
 Command `explain` helps to determine what scan type is used. Is index utilized or not. For example:
@@ -75,15 +79,13 @@ WHERE name = 'Computer systems: a programmer''s perspective';
 
 ![explain example](../assets/explain-example.png)
 
-#### Index-Only Scan
-
 The difference between _Index Scan_ and _Index-Only Scan_ is that during
 _Index Scan_ the Executor fetch additional data from table, but during
 _Index-Only Scan_ the Executor fetches data only from index.
 
 [Covering index](#covering-indexes-include) may be used to enforce _Index-Only Scan_.
 
-#### Indexing Foreign keys
+### Indexing Foreign keys
 
 Index on _Foreign key_ can:
 
@@ -91,11 +93,15 @@ Index on _Foreign key_ can:
 * Improve performance when making changes to a referenced table.
   DB ensures consistency of rules, therefore update/delete of a referenced table row can lead to usage of the index.
 
-#### Partial indexes
+### Partial indexes
 
 This method can help to reduce index bloat and increase performance in rare cases.
-Pros & cons and Use Cases [are described here](#partial-indexes-where).
+Pros & cons and use cases [are described here](#partial-indexes-where).
 
+
+### Clusterization
+
+Pros & cons and use cases [are described here](#clusterization-1).
 
 ## Concepts
 
@@ -112,7 +118,7 @@ Conceptually, an index stores:
   43rd 8KB block of the table or index (blocks are counted from 0).
 
 **Indexes accelerate reads but add write costs!**
-Therefore they should be used on tables with high read/write ratio.
+Therefore, they should be used on tables with high read/write ratio.
 
 * _INSERT_: add index entries.
 * _UPDATE_: may add new entries (and sometimes remove old ones logically).
@@ -183,6 +189,49 @@ Use case for this index is where win is measured based on: _space-consumption_ (
 and _read/write ratio_.
 
 Official documentation [is here](https://www.postgresql.org/docs/current/indexes-index-only-scans.html).
+
+### Clusterization
+
+**Sequential Scan** is not necessary bad.
+Postgres can utilize indexes along with sequential scan to boost performance.
+
+`CLUSTER` is a PostgreSQL operation that physically rewrites a table to match the order of a specified index.
+This can reduce random access to table and utilize sequential scan when needed.
+
+It works similarly to `VACUUM FULL`. The main difference that `CLUSTER` not only reduces bloat, but also changes structure of a table.
+
+![clustered table](../assets/clustered-table.png)
+
+`CLUSTER` is **not self-maintaining**: subsequent inserts/updates will gradually erode the physical ordering,
+so clustering is best treated as a periodic maintenance action.
+
+How it works:
+
+* `CLUSTER` operation fully rewrites table to another place, similarly to `VACUUM FULL`.
+* After run of `CLUSTER table USING index` that index is stored in metadata and later can be used by `CLUSTER table`.
+
+Pros:
+
+* Faster range scans.
+* Improved cache efficiency. 
+* Bloat decrease side effect. Full rewrite of the table removes **dead tuples**.
+* Can improve planner cost estimates.
+
+Cons:
+
+* Requires full table lock. Similarly to `VACUUM FULL`. Sometimes it can be _impossible_ for production environments.
+* Not self-maintaining. `CLUSTER` command adds operational overhead: 
+  proper frequency, time, factors for execution have to be selected.
+* Heavy operation. It leads to full table rewrite, hence the bigger the table the more I/O needed.
+
+Use cases:
+
+* Time-based access, e.g. `WHERE created_at < CURRENT_DATE - 7`.
+* Multi-tenant table with field like `tenant_id`.
+* OLAP (Online Analytical Processing) where batch processing can suffocate from high I/O.
+* Improving [BRIN](#brin-block-range-index) effectiveness.
+
+Official documentation [is here](https://www.postgresql.org/docs/current/sql-cluster.html).
 
 ### Reindex
 
