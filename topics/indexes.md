@@ -231,6 +231,26 @@ Use cases:
 * OLAP (Online Analytical Processing) where batch processing can suffocate from high I/O.
 * Improving [BRIN](#brin-block-range-index) effectiveness.
 
+Analyzation:
+
+Postgres can show data correlation for columns.
+Execute after [analyze](TODO):
+
+```sql
+SELECT tablename, attname, correlation 
+FROM pg_stats 
+WHERE tablename IN ('table', 'names') 
+ORDER BY tablename, attname;
+```
+
+Values in the column `correlation` can be in range [-1, 1], this means:
+* Near +1: rows are physically ordered in ascending order.
+* Near -1: rows are physically ordered in descending order.
+* Near 0: random physical order.
+
+In short, `-1` or `+1` mean that data **is clustered**.
+Official explanation [is here](https://www.postgresql.org/docs/current/view-pg-stats.html) (look for `correlation`).
+
 Official documentation [is here](https://www.postgresql.org/docs/current/sql-cluster.html).
 
 ### Reindex
