@@ -15,14 +15,18 @@ but it's open to critic and improvements.
 | [Postgres internals](https://www.interdb.jp/pg/index.html#the-internals-of-postgresql)                                   | Explanation of Postgres internals from an enthusiast [Hironobu Suzuki](https://github.com/s-hironobu).                                                 |
 | [Udemy PostgreSQL High Performance Tuning Guide](https://www.udemy.com/course/postgresql-high-performance-tuning-guide/) | May be hard to learn, but very useful course related to Postgres turing using all the DB aspects. [Author](https://www.udemy.com/user/lucian-oprea-2/) |
 
-## Topics
+## Optimization topics
 
-* [Indexes](/topics/indexes.md)
+* [Indexes](topics/indexes.md)
 * SARGable queries
-* Write ahead log (WAL).
+* Write ahead log (WAL)
 * Vacuum
 * Statistics (pg_stat)
 * Analyzation (vacuum analyze, analyze, explain, explain analyze)
+* [Uncategorized](topics/uncategorized.md)
+
+## High availability topics
+
 * Scalability
 * Data distribution
 * Modern observability
@@ -47,12 +51,3 @@ Each component can be tuned accordingly to system requirements.
 
 In AWS RDS `postgresql.conf` values can be set up in `RDS` > `Parameter groups`.
 [Docs](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_WorkingWithDBInstanceParamGroups.html)
-
-## Tags in this repo
-
-Tags in this repository show resources that can be affected by some topic.
-Doesn't matter whether a tuning makes that aspect better or worse.
-For example index can increase speed of search,
-but consume a storage, therefore it's marked with speed and storage hashtags.
-
-A reader can use tags to determine what aspect of a DB he wants to optimize and continue with an actual topic(s).
