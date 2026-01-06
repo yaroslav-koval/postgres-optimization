@@ -9,11 +9,13 @@
     * [Indexing Foreign keys](#indexing-foreign-keys)
     * [Partial indexes](#partial-indexes)
     * [Clusterization](#clusterization)
+    * [Fillfactor](#fillfactor)
   * [Concepts](#concepts)
     * [Index is](#index-is)
     * [Partial indexes (WHERE)](#partial-indexes-where)
     * [Covering indexes (INCLUDE)](#covering-indexes-include)
     * [Clusterization](#clusterization-1)
+    * [Index fillfactor](#index-fillfactor)
     * [Reindex](#reindex)
   * [Index types](#index-types)
     * [B-tree (default, most common).](#b-tree-default-most-common)
@@ -120,6 +122,24 @@ From time to time a table data can be rewritten and clustered accordingly to ind
 
 Pros & cons and use cases [are described here](#clusterization-1).
 
+### Fillfactor
+
+Low `fillfactor` for write-heavy operations to delay page split or high `fillfactor` for static indexes.
+Actually, static indexes means that the table columns they're built on are static.\
+
+```sql
+CREATE INDEX idx ON t USING btree (k) WITH (fillfactor = 80);
+```
+
+OR
+
+```sql
+ALTER INDEX idx SET (fillfactor=95);
+REINDEX INDEX idx;
+```
+
+Details [are described here](#index-fillfactor).
+
 ## Concepts
 
 ### Index is
@@ -214,6 +234,7 @@ Postgres can utilize indexes along with sequential scan to boost performance.
 
 `CLUSTER` is a PostgreSQL operation that physically rewrites a table to match the order of a specified index.
 This can reduce random access to table and utilize sequential scan when needed.
+Also, this operation allows to fetch more useful data from a single table page, therefore _scan less pages_ than with random ordering.
 
 It works similarly to `VACUUM FULL`. The main difference that `CLUSTER` not only reduces bloat, but also changes structure of a table.
 
@@ -269,6 +290,49 @@ In short, `-1` or `+1` mean that data **is clustered**.
 Official explanation [is here](https://www.postgresql.org/docs/current/view-pg-stats.html) (look for `correlation`).
 
 Official documentation [is here](https://www.postgresql.org/docs/current/sql-cluster.html).
+
+### Index fillfactor
+
+`fillfactor` is an indexes parameter that can be used in `WITH` clause _only_ for [B-tree](#b-tree-default-most-common), 
+[HASH](#hash), [GIST](#gist-generalized-search-tree) and [SP-GIST](#sp-gist-space-partitioned-gist) indexes.
+
+**B-tree** index is constructed of leaves (as pages 8kB), while **HASH** of buckets (8kB), but they share similar idea:
+they are a pile of pages structured in different ways.
+
+`fillfactor` tells Postgres how tight should a single page be packed.
+
+When an index is created or command `REINDEX` is executed Postgres tries to fill the pages up to specified `fillfactor` percentage.
+For example, 30% `fillfactor` would pack leaves to 8kB * 0.3 = 2.4kB, leaving 5.6kB for future usage.
+
+Inserting new values to index can lead to **overflow of a page**.
+When an incoming index tuple cannot fit on the target page, the page is **split**:
+a new sibling page is allocated and some tuples are moved to that page from old one.\
+Different index types split pages differently, the details are not described here.
+
+Default fillfactors:
+* B-tree: 90 (BTREE_DEFAULT_FILLFACTOR [here](https://doxygen.postgresql.org/nbtree_8h_source.html))
+* HASH: 75 (HASH_DEFAULT_FILLFACTOR [here](https://doxygen.postgresql.org/hash_8h_source.html))
+* GIST: 90 (GIST_DEFAULT_FILLFACTOR [here](https://doxygen.postgresql.org/gist__private_8h_source.html)) 
+* SP-GIST: (SPGIST_DEFAULT_FILLFACTOR [here](https://doxygen.postgresql.org/spgist__private_8h_source.html))
+
+Available range for `fillfactor` is `[10; 100]`.
+
+Pros of lower `fillfactor` (<60%):
+
+* Less or delayed page splits, therefore less operational overhead.
+
+Cons of lower `fillfactor` (<60%):
+
+* Larger index size (space consumption).
+* Build time, reindex time, vacuum time can increase.
+
+Use cases:
+* 100% `fillfactor` for totally static indexes (no updates/deletes). This can reduce storage consumption on big indexes.
+* Low `fillfactor` for write-heavy operations (insert/update/delete) on a table. Need to tune carefully based on production data.
+* For OLTP load an index can be initially created with lower `fillfactor`, but then monitored for a bloat 
+  and `ALTER`ed + `REINDEX`ed.
+
+There's an optimization related to [table fillfactor](uncategorized.md#table-fillfactor).
 
 ### Reindex
 
