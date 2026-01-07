@@ -384,6 +384,8 @@ SELECT FROM my_table WHERE col3 <= 25;
 SELECT FROM my_table WHERE col2 < 10 AND col3 <= 25;
 ```
 
+Similar rules are applied to **ordering**. From left to right.
+
 Pros:
 
 * Increased performance for filtering/ordering when several columns are used (compared to single-column indexes).
