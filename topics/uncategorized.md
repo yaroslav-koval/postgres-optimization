@@ -19,9 +19,10 @@ Official documentation has a great description of this mechanism
 In short: When set below **100**, `INSERT` will pack each page only up to that percentage, 
 leaving the remaining space reserved primarily for future row versions created by `UPDATE`.
 
-Possible values of `fillfactor` are in a range `[10; 100]` with default 100.
-But at the same time there's mentioned "in heavily updated tables smaller `fillfactors` are appropriate";
+![table fillfactor](../assets/table-fillfactor.png)
 
+Possible values of `fillfactor` are in a range `[10; 100]` with default 100.
+But at the same time there's mentioned "in heavily updated tables smaller `fillfactors` are appropriate".
 Usually almost all project tables are **often updated**, therefore it's suggested to decrease `fillfactor`.
 
 Pros of low `fillfactor`:
@@ -47,4 +48,4 @@ Use cases:
 
 The system view [pg_stat_all_tables](https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STAT-ALL-TABLES-VIEW) allows monitoring of the occurrence of HOT and non-HOT updates.
 
-TODO: sql snippet
+TODO: sql snippet for pg_stat_all_tables.
